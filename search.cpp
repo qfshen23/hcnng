@@ -33,6 +33,10 @@
 
 using namespace std;
 
+// Because of the random construction of the MST and combine them together
+// If we use furthest_dist to prune during the `beam search phase`, 
+// we cannot reach high recall (i.e., higher than 92%)
+
 tuple<vector<int>, vector<float>> search_KNN(float *query, int K, AdjList &graph, Matrix<float> &points, int start, int max_calc){
 	int N = points.rows;
 	int calc_left = max_calc-1;
@@ -45,6 +49,7 @@ tuple<vector<int>, vector<float>> search_KNN(float *query, int K, AdjList &graph
 		float d; int v;
 		tie(d, v) = q.top();
 		q.pop();
+		// if(-d > furthest_dist) continue;
 		for(int u : graph[v]){
 			if(calc_left <= 0) break;
 			if(in_set(u, visited))
@@ -56,6 +61,10 @@ tuple<vector<int>, vector<float>> search_KNN(float *query, int K, AdjList &graph
 			knn.push(make_tuple(d, u));
 			if(knn.size() > K)
 				knn.pop();
+			// if(knn.size() == K) {
+			// 	tie(d, v) = knn.top();
+			// 	furthest_dist = std::min(d, furthest_dist);
+			// }
 		}
 	}
 
