@@ -23,6 +23,7 @@
 #include <cmath>
 #include <sys/time.h>
 #include "common.h"
+#include "utils.h"
 #include <omp.h>
 #include <random>
 #include <time.h>
@@ -77,12 +78,19 @@ void run_on_testset(Matrix<float> &queries, int K, Matrix<float> &points, vector
 	float recall = 0;
 	int N = points.rows;
 	int num_queries = queries.rows;
+	
+	unsigned long long time = 0;
 
+	StopW stopw = StopW();
+#ifdef USE_OPENMP
 	#pragma omp parallel for
-	for(int i=0; i<num_queries; i++){
+#endif
+	for(int i = 0; i < num_queries; i++){
 		int start = rand_int(0, N-1);
 		auto knn = search_KNN(queries[i], K, graph, points, start, max_calc);
+#ifdef USE_OPENMP
 		#pragma omp critical
+#endif
 		{
 			// vector<float> aux(K);
 			// for(int j=0; j<K; j++)
@@ -91,7 +99,14 @@ void run_on_testset(Matrix<float> &queries, int K, Matrix<float> &points, vector
 			recall += get_recall(GT[i], get<0>(knn), K);
 		}
 	}
-	printf("Recall@%d(%d):\t%.2lf\n", K, max_calc, recall*100/num_queries);
+	time += stopw.getElapsedTimeMicro();
+
+	float time_us_per_query = time / num_queries;
+
+	cout << "------------------------------------------------" << endl;
+	cout << "K = " << K << " max_clac= " << max_calc <<  endl;
+	cout << "Recall = " << recall * 100.000 / num_queries << endl;
+	cout << "Time = " << time_us_per_query << " us \t QPS = " << 1e6 / (time_us_per_query) << " query/s" << endl;
 }
 
 
@@ -112,6 +127,7 @@ int main(int argc, char** argv){
 	string file_graph(argv[4]);
 	int K = atoi(argv[5]);
 	int max_calc = atoi(argv[6]);
+	const char* result_file(argv[7]);
 
 	Matrix<float> points = read_fvecs(file_dataset, N, Dim);
 	printf("base read (%d,%d) ...\n", N, Dim);
@@ -119,6 +135,8 @@ int main(int argc, char** argv){
 	printf("queries read (%d,%d)...\n", num_queries, Dim);
 	vector<vector<int> > gt = read_ivecs(file_gt, num_queries, nn_gt);
 	printf("groundtruth read...\n");
+
+	freopen(result_file, "a", stdout);
 
 	AdjList graph = read_adjlist(file_graph, points, true);
 	
@@ -131,6 +149,8 @@ int main(int argc, char** argv){
 			run_on_testset(queries, K, points, gt, graph, max_calc);
 		}
 	}
+
+	fclose(stdout);
 	return 0;
 }
 

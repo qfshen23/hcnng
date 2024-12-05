@@ -147,9 +147,11 @@ Graph HCNNG_create_graph(Matrix<float> &points, int Dim, int num_cl, int minsize
 	vector<omp_lock_t> locks(N);
 	for(int i=0; i<N; i++){
 		omp_init_lock(&locks[i]);
-		G[i].reserve(max_mst_degree*num_cl);
+		G[i].reserve(max_mst_degree * num_cl);
 	}
-	printf("creating clusters...\n");
+
+	printf("Creating clusters...\n");
+
 	#pragma omp parallel for
 	for(int i=0; i<num_cl; i++){
 		int * idx_points = new int[N];
@@ -159,8 +161,10 @@ Graph HCNNG_create_graph(Matrix<float> &points, int Dim, int num_cl, int minsize
 		printf("end cluster %d\n", i);
 		delete[] idx_points;
 	}
-	printf("sorting...\n");
+
+	printf("Sorting...\n");
 	sort_edges(G);
+	
 	print_stats_graph(G);
 	return G;
 }
@@ -182,8 +186,8 @@ int main(int argc, char** argv){
 	
 
 	printf("\n***************************\n");
-	printf("MIN SZ CL:\t%d\n", minsize_cl);
-	printf("NUMBER CL:\t%d\n", num_cl);
+	printf("MIN SIZE OF CLUSTER(LEAF NODE):\t%d\n", minsize_cl);
+	printf("NUMBER OF CLUSTERS:\t%d\n", num_cl);
 	printf("***************************\n\n");
 
 	Matrix<float> points = read_fvecs(file_dataset, N, Dim);
