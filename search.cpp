@@ -41,12 +41,12 @@ tuple<vector<int>, vector<float>> search_KNN(float *query, int K, AdjList &graph
 	float furthest_dist = dist_L2(points[start], query, points.cols);
 	q.push(make_tuple(-furthest_dist, start));
 	knn.push(make_tuple(furthest_dist, start));
-	while(!q.empty() && calc_left>0){
+	while(!q.empty() && calc_left > 0){
 		float d; int v;
 		tie(d, v) = q.top();
 		q.pop();
 		for(int u : graph[v]){
-			if(calc_left<=0) break;
+			if(calc_left <= 0) break;
 			if(in_set(u, visited))
 				continue;
 			visited.insert(u);
@@ -86,16 +86,13 @@ void run_on_testset(Matrix<float> &queries, int K, Matrix<float> &points, vector
 	#pragma omp parallel for
 #endif
 	for(int i = 0; i < num_queries; i++){
+		// choose start point randomly
 		int start = rand_int(0, N-1);
 		auto knn = search_KNN(queries[i], K, graph, points, start, max_calc);
 #ifdef USE_OPENMP
 		#pragma omp critical
 #endif
 		{
-			// vector<float> aux(K);
-			// for(int j=0; j<K; j++)
-			// 	aux[j] = dist_L2(points[GT[i][j]], queries[i], points.cols);
-			// recall += get_recall_dist(aux, get<1>(knn));
 			recall += get_recall(GT[i], get<0>(knn), K);
 		}
 	}
@@ -144,6 +141,7 @@ int main(int argc, char** argv){
 		run_on_testset(queries, K, points, gt, graph, max_calc);
 	else{
 		float p=0;
+		// max_calc means the maximum calculation time (i.e., the number of explored vertex)
 		for(p=4.0;p>=1.99; p-=0.10){
 			max_calc = (int) ((float)N / pow(10.0, p));
 			run_on_testset(queries, K, points, gt, graph, max_calc);

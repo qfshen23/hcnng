@@ -1,7 +1,7 @@
 cd ..
 g++ -fopenmp -O3 -o ./hcnng hcnng.cpp -I ./common.h
 
-datasets=('sift')
+datasets=('sift' 'gist' )
 
 min_cluster=1000
 num_cluster=20
