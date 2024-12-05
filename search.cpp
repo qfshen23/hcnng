@@ -37,6 +37,8 @@ using namespace std;
 // If we use furthest_dist to prune during the `beam search phase`, 
 // we cannot reach high recall (i.e., higher than 92%)
 
+// However, if we only need not near-perfect recall, we can add pruning, it can improve the QPS
+
 tuple<vector<int>, vector<float>> search_KNN(float *query, int K, AdjList &graph, Matrix<float> &points, int start, int max_calc){
 	int N = points.rows;
 	int calc_left = max_calc-1;
